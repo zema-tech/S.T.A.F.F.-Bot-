@@ -73,12 +73,16 @@ class AdminCog(commands.Cog):
     @app_commands.checks.has_permissions(manage_guild=True)
     async def ticket_regolamento_set(self, interaction: discord.Interaction):
         class RegModal(discord.ui.Modal):
-            testo = discord.ui.TextInput(label='Nuovo Regolamento', style=discord.TextStyle.paragraph, max_length=2000)
+            def __init__(self, supabase):
+                super().__init__(title='Imposta Regolamento')
+                self.supabase = supabase
+                self.testo = discord.ui.TextInput(label='Nuovo Regolamento', style=discord.TextStyle.paragraph, max_length=2000)
+                self.add_item(self.testo)
             async def on_submit(self, modal_inter: discord.Interaction):
                 new_value = {'text': self.testo.value}
-                self.supabase.table('config').upsert({'key': 'regolamento', 'value': new_value}).execute()  # self from outer?
+                self.supabase.table('config').upsert({'key': 'regolamento', 'value': new_value}).execute()
                 await modal_inter.response.send_message('✅ Regolamento aggiornato. Sync lo propagherà.', ephemeral=True)
-        await interaction.response.send_modal(RegModal(title='Imposta Regolamento'))
+        await interaction.response.send_modal(RegModal(self.supabase))
 
     @app_commands.command(name="staff-competenza-set")
     @app_commands.checks.has_permissions(manage_guild=True)
